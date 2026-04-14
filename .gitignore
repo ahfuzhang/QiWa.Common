@@ -1,0 +1,5 @@
+/build/
+/bin/
+/obj/
+/app_key.txt
+/.claude/
