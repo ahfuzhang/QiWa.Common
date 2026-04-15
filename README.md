@@ -17,7 +17,7 @@ https://www.nuget.org/packages/QiWa.Common/
 
 ```bash
 dotnet add package QiWa.Common \
-  --version 0.1.1 \
+  --version 0.1.3 \
   --source https://api.nuget.org/v3/index.json
 ```
 

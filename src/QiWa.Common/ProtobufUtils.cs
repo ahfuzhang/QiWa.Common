@@ -17,8 +17,12 @@ public static class ProtobufUtils
     // ── Writing ──────────────────────────────────────────────────────────────
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ulong EncodeTag(int fieldNumber, int wireType)
+        => ((uint)fieldNumber << 3) | (uint)wireType;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void WriteTag(ref RentedBuffer buf, int fieldNumber, int wireType)
-        => WriteVarint(ref buf, (ulong)((fieldNumber << 3) | wireType));
+        => WriteVarint(ref buf, EncodeTag(fieldNumber, wireType));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void WriteVarint(ref RentedBuffer buf, ulong value)
@@ -247,5 +251,31 @@ public static class ProtobufUtils
             default:
                 return false;
         }
+    }
+
+    public static int VarintSize(ulong value)
+    {
+        int size = 1;
+        while (value >= 0x80)
+        {
+            size++;
+            value >>= 7;
+        }
+        return size;
+    }
+
+    public static int TagSize(int fieldNum, int wireType)
+    {
+        return VarintSize(EncodeTag(fieldNum, wireType));
+    }
+
+    public static int LenDelimSize(int payloadLength)
+    {
+        return VarintSize((ulong)payloadLength) + payloadLength;
+    }
+
+    public static int StringByteCount(string? value)
+    {
+        return value != null ? Encoding.UTF8.GetByteCount(value) : 0;
     }
 }

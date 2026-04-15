@@ -1,3 +1,4 @@
+using System.Text;
 using Xunit;
 
 namespace QiWa.Common.Tests;
@@ -13,6 +14,68 @@ public class ProtobufUtilsTests
         Assert.Equal(1, ProtobufUtils.WireType64Bit);
         Assert.Equal(2, ProtobufUtils.WireTypeLenDelim);
         Assert.Equal(5, ProtobufUtils.WireType32Bit);
+    }
+
+    // ─── Size Helpers ─────────────────────────────────────────────────────────
+
+    [Theory]
+    [InlineData(0UL,                       1)]
+    [InlineData(1UL,                       1)]
+    [InlineData(127UL,                     1)]
+    [InlineData(128UL,                     2)]
+    [InlineData(16383UL,                   2)]
+    [InlineData(16384UL,                   3)]
+    [InlineData(2097151UL,                 3)]
+    [InlineData(2097152UL,                 4)]
+    [InlineData(268435455UL,               4)]
+    [InlineData(268435456UL,               5)]
+    [InlineData(18446744073709551615UL,   10)]
+    public void VarintSize_ReturnsCorrectEncodedLength(ulong value, int expectedSize)
+    {
+        Assert.Equal(expectedSize, ProtobufUtils.VarintSize(value));
+    }
+
+    [Theory]
+    [InlineData(1, 0, 1)]
+    [InlineData(15, 5, 1)]
+    [InlineData(16, 0, 2)]
+    [InlineData(2047, 5, 2)]
+    [InlineData(2048, 2, 3)]
+    [InlineData(int.MaxValue, 1, 5)]
+    public void TagSize_ReturnsCorrectEncodedLength(int fieldNumber, int wireType, int expectedSize)
+    {
+        Assert.Equal(expectedSize, ProtobufUtils.TagSize(fieldNumber, wireType));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(127)]
+    [InlineData(128)]
+    [InlineData(16383)]
+    [InlineData(16384)]
+    public void LenDelimSize_MatchesWriteBytesLength(int payloadLength)
+    {
+        var buf = new RentedBuffer(payloadLength + 16);
+        try
+        {
+            ProtobufUtils.WriteBytes(ref buf, new byte[payloadLength]);
+            Assert.Equal(buf.Length, ProtobufUtils.LenDelimSize(payloadLength));
+        }
+        finally { buf.Dispose(); }
+    }
+
+    [Theory]
+    [InlineData(null, 0)]
+    [InlineData("", 0)]
+    [InlineData("hello", 5)]
+    [InlineData("中", 3)]
+    [InlineData("🙂", 4)]
+    [InlineData("A中🙂", 8)]
+    public void StringByteCount_ReturnsUtf8ByteCount(string? value, int expectedByteCount)
+    {
+        Assert.Equal(expectedByteCount, ProtobufUtils.StringByteCount(value));
+        Assert.Equal(expectedByteCount, value is null ? 0 : Encoding.UTF8.GetByteCount(value));
     }
 
     // ─── WriteTag ────────────────────────────────────────────────────────────
