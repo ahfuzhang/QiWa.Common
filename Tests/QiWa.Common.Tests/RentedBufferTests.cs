@@ -11,7 +11,7 @@ public class RentedBufferTests
     private static string AsString(RentedBuffer buf) =>
         Encoding.UTF8.GetString(buf.AsSpan());
 
-    // ─── Constructor / Rent ───────────────────────────────────────────────────
+    // ─── Constructor ─────────────────────────────────────────────────────────
 
     [Fact]
     public void Constructor_CreatesBufferWithZeroLength()
@@ -26,32 +26,15 @@ public class RentedBufferTests
         finally { buf.Dispose(); }
     }
 
-    [Fact]
-    public void Rent_SetsDataAndResetsLength()
-    {
-        var buf = new RentedBuffer(64);
-        try
-        {
-            buf.Append("hello");
-            Assert.Equal(5, buf.Length);
-
-            buf.Rent(32);
-            Assert.NotNull(buf.Data);
-            Assert.Equal(0, buf.Length);
-        }
-        finally { buf.Dispose(); }
-    }
-
     // ─── Dispose ──────────────────────────────────────────────────────────────
 
     [Fact]
-    public void Dispose_SetsDataToNullAndLengthToZero()
+    public void Dispose_ClearsLengthToZero()
     {
         var buf = new RentedBuffer(64);
         buf.Append("test");
         buf.Dispose();
 
-        Assert.Null(buf.Data);
         Assert.Equal(0, buf.Length);
     }
 
@@ -66,10 +49,10 @@ public class RentedBufferTests
     // ─── AsSpan ───────────────────────────────────────────────────────────────
 
     [Fact]
-    public void AsSpan_ReturnsEmpty_WhenDataIsNull()
+    public void AsSpan_ReturnsEmpty_AfterDispose()
     {
         var buf = new RentedBuffer(64);
-        buf.Dispose(); // sets Data = null
+        buf.Dispose();
 
         Assert.True(buf.AsSpan().IsEmpty);
     }
@@ -113,9 +96,9 @@ public class RentedBufferTests
         var buf = new RentedBuffer(100);
         try
         {
-            int cap = buf.Data!.Length;
+            int cap = buf.Data.Length;
             buf.Extend(cap); // Length(0) + needed(cap) == cap → no growth
-            Assert.Equal(cap, buf.Data!.Length);
+            Assert.Equal(cap, buf.Data.Length);
         }
         finally { buf.Dispose(); }
     }
@@ -126,10 +109,10 @@ public class RentedBufferTests
         var buf = new RentedBuffer(16);
         try
         {
-            int cap = buf.Data!.Length;
+            int cap = buf.Data.Length;
             buf.Length = cap; // treat buffer as full
             buf.Extend(1);
-            Assert.True(buf.Data!.Length > cap);
+            Assert.True(buf.Data.Length > cap);
         }
         finally { buf.Dispose(); }
     }
@@ -141,10 +124,10 @@ public class RentedBufferTests
         var buf = new RentedBuffer(16);
         try
         {
-            int cap = buf.Data!.Length;
+            int cap = buf.Data.Length;
             buf.Length = cap;
             buf.Extend(1); // Math.Max(cap * 2, cap + 1) == cap * 2
-            Assert.True(buf.Data!.Length >= cap * 2);
+            Assert.True(buf.Data.Length >= cap * 2);
         }
         finally { buf.Dispose(); }
     }
@@ -156,11 +139,11 @@ public class RentedBufferTests
         var buf = new RentedBuffer(16);
         try
         {
-            int cap = buf.Data!.Length;
+            int cap = buf.Data.Length;
             buf.Length = cap;
             int needed = cap * 10; // much larger than cap * 2
             buf.Extend(needed);
-            Assert.True(buf.Data!.Length >= cap + needed);
+            Assert.True(buf.Data.Length >= cap + needed);
         }
         finally { buf.Dispose(); }
     }
@@ -297,7 +280,7 @@ public class RentedBufferTests
         {
             buf.Append((byte)0x41); // 'A'
             Assert.Equal(1, buf.Length);
-            Assert.Equal(0x41, buf.Data![0]);
+            Assert.Equal(0x41, buf.Data[0]);
         }
         finally { buf.Dispose(); }
     }
@@ -606,7 +589,7 @@ public class RentedBufferTests
         try
         {
             buf.AppendUtcDatetime(DateTime.UtcNow);
-            Assert.Equal((byte)'Z', buf.Data![27]);
+            Assert.Equal((byte)'Z', buf.Data[27]);
         }
         finally { buf.Dispose(); }
     }
@@ -892,8 +875,8 @@ public class RentedBufferTests
             buf.AppendAsJsonEscapedString(new ReadOnlySpan<byte>(new byte[] { (byte)'\t' }));
 
             Assert.Equal(2, buf.Length);
-            Assert.Equal((byte)'\\', buf.Data![0]);
-            Assert.Equal((byte)'t', buf.Data![1]);
+            Assert.Equal((byte)'\\', buf.Data[0]);
+            Assert.Equal((byte)'t', buf.Data[1]);
         }
         finally { buf.Dispose(); }
     }
@@ -907,8 +890,8 @@ public class RentedBufferTests
             buf.AppendAsJsonEscapedString(new ReadOnlySpan<byte>(new byte[] { (byte)'\n' }));
 
             Assert.Equal(2, buf.Length);
-            Assert.Equal((byte)'\\', buf.Data![0]);
-            Assert.Equal((byte)'n', buf.Data![1]);
+            Assert.Equal((byte)'\\', buf.Data[0]);
+            Assert.Equal((byte)'n', buf.Data[1]);
         }
         finally { buf.Dispose(); }
     }
@@ -922,8 +905,8 @@ public class RentedBufferTests
             buf.AppendAsJsonEscapedString(new ReadOnlySpan<byte>(new byte[] { (byte)'\\' }));
 
             Assert.Equal(2, buf.Length);
-            Assert.Equal((byte)'\\', buf.Data![0]);
-            Assert.Equal((byte)'\\', buf.Data![1]);
+            Assert.Equal((byte)'\\', buf.Data[0]);
+            Assert.Equal((byte)'\\', buf.Data[1]);
         }
         finally { buf.Dispose(); }
     }
@@ -937,8 +920,8 @@ public class RentedBufferTests
             buf.AppendAsJsonEscapedString(new ReadOnlySpan<byte>(new byte[] { (byte)'"' }));
 
             Assert.Equal(2, buf.Length);
-            Assert.Equal((byte)'\\', buf.Data![0]);
-            Assert.Equal((byte)'"', buf.Data![1]);
+            Assert.Equal((byte)'\\', buf.Data[0]);
+            Assert.Equal((byte)'"', buf.Data[1]);
         }
         finally { buf.Dispose(); }
     }

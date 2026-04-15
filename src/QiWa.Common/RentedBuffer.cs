@@ -16,7 +16,7 @@ public struct RentedBuffer : IDisposable
     /// <summary>
     /// Memory borrowed from the shared array pool. May be null, indicating no memory has been borrowed.
     /// </summary>
-    public byte[]? Data;
+    public byte[] Data;
 
     /// <summary>
     /// Number of bytes used in Data. Data.Length is the total borrowed size; Length is the actual used size. Length ≤ Data.Length.
@@ -31,23 +31,12 @@ public struct RentedBuffer : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RentedBuffer(System.Int32 length)
     {
-        Rent(length);
+        Data = ArrayPool<byte>.Shared.Rent(length);
+        Length = 0;
     }
 
     private const string Utf8FormatterFailedMessage = "Utf8Formatter.TryFormat failed.";
     private const int CodeOfFormatFail = 254;
-
-    /// <summary>
-    /// Borrows memory from the array pool.
-    /// </summary>
-    /// <param name="length">Required memory size</param>
-    /// <exception>out of memory</exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Rent(System.Int32 length)
-    {
-        Data = ArrayPool<byte>.Shared.Rent(length);
-        Length = 0;
-    }
 
     /// <summary>
     /// Returns the borrowed memory to the array pool. Forgetting to call this when leaving the scope will cause a memory leak.
@@ -58,7 +47,7 @@ public struct RentedBuffer : IDisposable
         if (Data != null)
         {
             ArrayPool<byte>.Shared.Return(Data);
-            Data = null;
+            Data = null!;
         }
         Length = 0;
     }
@@ -70,7 +59,7 @@ public struct RentedBuffer : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<byte> AsSpan()
     {
-        if (Data == null || Length == 0)
+        if (Length == 0)
         {
             return [];
         }
@@ -86,7 +75,7 @@ public struct RentedBuffer : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Extend(int needed)
     {
-        if (Length + needed <= Data!.Length)
+        if (Length + needed <= Data.Length)
         {
             return;
         }
@@ -113,7 +102,7 @@ public struct RentedBuffer : IDisposable
             }
             int byteCount = UTF8.GetByteCount(s);
             Extend(byteCount);
-            int bytesWritten = UTF8.GetBytes(s, 0, s.Length, Data!, Length);
+            int bytesWritten = UTF8.GetBytes(s, 0, s.Length, Data, Length);
             Length += bytesWritten;
         }
         return default(Error);
@@ -133,7 +122,7 @@ public struct RentedBuffer : IDisposable
         }
         int byteCount = UTF8.GetByteCount(s);
         Extend(byteCount);
-        int bytesWritten = UTF8.GetBytes(s, 0, s.Length, Data!, Length);
+        int bytesWritten = UTF8.GetBytes(s, 0, s.Length, Data, Length);
         Length += bytesWritten;
         return default(Error);
     }
@@ -147,7 +136,7 @@ public struct RentedBuffer : IDisposable
     public Error Append(byte c)
     {
         Extend(1);
-        Data![Length] = c;
+        Data[Length] = c;
         Length++;
         return default(Error);
     }
@@ -344,8 +333,8 @@ public struct RentedBuffer : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly RentedBuffer Clone()
     {
-        RentedBuffer cloned = new(Data!.Length);
-        Array.Copy(Data, cloned.Data!, Length);
+        RentedBuffer cloned = new(Data.Length);
+        Array.Copy(Data, cloned.Data, Length);
         cloned.Length = Length;
         return cloned;
     }
@@ -386,7 +375,7 @@ public struct RentedBuffer : IDisposable
             int utf8Length = UTF8.GetBytes(s, utf8Temp);
             JavaScriptEncoder.UnsafeRelaxedJsonEscaping.EncodeUtf8(
                 utf8Temp[..utf8Length],
-                Data!.AsSpan(Length, maxEscapedBytes),
+                Data.AsSpan(Length, maxEscapedBytes),
                 out _, out int bytesWritten);
             Length += bytesWritten;
         }
@@ -398,7 +387,7 @@ public struct RentedBuffer : IDisposable
                 int utf8Length = UTF8.GetBytes(s, utf8Temp);
                 JavaScriptEncoder.UnsafeRelaxedJsonEscaping.EncodeUtf8(
                     utf8Temp.AsSpan(0, utf8Length),
-                    Data!.AsSpan(Length, maxEscapedBytes),
+                    Data.AsSpan(Length, maxEscapedBytes),
                     out _, out int bytesWritten);
                 Length += bytesWritten;
             }
@@ -425,27 +414,27 @@ public struct RentedBuffer : IDisposable
             switch (b)
             {
                 case (byte)'\t':
-                    Data![Length] = (byte)'\\';
+                    Data[Length] = (byte)'\\';
                     Data[Length + 1] = (byte)'t';
                     Length += 2;
                     break;
                 case (byte)'\n':
-                    Data![Length] = (byte)'\\';
+                    Data[Length] = (byte)'\\';
                     Data[Length + 1] = (byte)'n';
                     Length += 2;
                     break;
                 case (byte)'\\':
-                    Data![Length] = (byte)'\\';
+                    Data[Length] = (byte)'\\';
                     Data[Length + 1] = (byte)'\\';
                     Length += 2;
                     break;
                 case (byte)'"':
-                    Data![Length] = (byte)'\\';
+                    Data[Length] = (byte)'\\';
                     Data[Length + 1] = (byte)'"';
                     Length += 2;
                     break;
                 default:
-                    Data![Length] = b;
+                    Data[Length] = b;
                     Length++;
                     break;
             }
