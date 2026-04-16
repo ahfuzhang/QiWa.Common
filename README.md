@@ -10,6 +10,8 @@ Following the approach of Go, we define the underlying basic types in C#. This i
 * 包含内容:
   - `struct Error`: 模仿 golang 的 error，通过返回代表错误的信息，来代替 throw 语句。
   - `struct RentedBuffer`: 模仿 golang 的 []byte，提供一个自动扩容的数组，来简化各种数据序列化的操作。
+  - `ProtobufUtils`: 处理 Protobuf 编解码的工具函数
+  - `IResetable`: 便于在代码生成工具中约定 `Reset()` 方法的实现。
 
 ## NuGet 仓库地址
 
@@ -17,7 +19,7 @@ https://www.nuget.org/packages/QiWa.Common/
 
 ```bash
 dotnet add package QiWa.Common \
-  --version 0.1.3 \
+  --version 0.1.5 \
   --source https://api.nuget.org/v3/index.json
 ```
 
@@ -25,7 +27,7 @@ dotnet add package QiWa.Common \
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QiWa.Common" Version="0.1.1" />
+  <PackageReference Include="QiWa.Common" Version="0.1.5" />
 </ItemGroup>
 ```
 
