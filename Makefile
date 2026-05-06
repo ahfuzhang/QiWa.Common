@@ -23,12 +23,14 @@ coverage:
 	@echo ""
 	@echo "Coverage report: $(COVERAGE_REPORT)/index.html"
 
+VER=0.1.7
+
 pack:
-	dotnet pack -c Release -p:PackageVersion=0.1.6
+	dotnet pack -c Release -p:PackageVersion=$(VER)
 
 # make push KEY=$(cat app_key.txt)
 push:
-	dotnet nuget push bin/Release/QiWa.Common.0.1.6.nupkg \
+	dotnet nuget push bin/Release/QiWa.Common.$(VER).nupkg \
 		--api-key $(KEY) \
 		--source https://api.nuget.org/v3/index.json
 

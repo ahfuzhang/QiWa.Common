@@ -136,8 +136,14 @@ public static class ProtobufUtils
     public static void WriteFixed64(ref RentedBuffer buf, ulong value)
     {
         buf.Extend(8);
-        for (int i = 0; i < 8; i++)
-            buf.Data![buf.Length + i] = (byte)(value >> (i * 8));
+        buf.Data![buf.Length + 7] = (byte)(value >> 56);
+        buf.Data![buf.Length + 6] = (byte)(value >> 48);
+        buf.Data![buf.Length + 5] = (byte)(value >> 40);
+        buf.Data![buf.Length + 4] = (byte)(value >> 32);
+        buf.Data![buf.Length + 3] = (byte)(value >> 24);
+        buf.Data![buf.Length + 2] = (byte)(value >> 16);
+        buf.Data![buf.Length + 1] = (byte)(value >> 8);
+        buf.Data![buf.Length + 0] = (byte)value;
         buf.Length += 8;
     }
 

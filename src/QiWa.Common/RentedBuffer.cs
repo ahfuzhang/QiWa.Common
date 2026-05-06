@@ -440,4 +440,14 @@ public struct RentedBuffer : IDisposable
             }
         }
     }
+
+    /// <summary>
+    /// return the remain buffer size
+    /// </summary>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly int Remain()
+    {
+        return this.Data.Length - this.Length;
+    }
 }
