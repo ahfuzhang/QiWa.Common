@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="QiWa.Common.csproj" />
+  <Project Path="Tests/QiWa.Common.Benchmarks/QiWa.Common.Benchmarks.csproj" />
   <Project Path="Tests/QiWa.Common.Tests/QiWa.Common.Tests.csproj" />
 </Solution>

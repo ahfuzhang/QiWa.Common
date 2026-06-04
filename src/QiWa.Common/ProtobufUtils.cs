@@ -11,10 +11,10 @@ namespace QiWa.Common;
 /// </summary>
 public static class ProtobufUtils
 {
-    public const int WireTypeVarint   = 0;
-    public const int WireType64Bit    = 1;
+    public const int WireTypeVarint = 0;
+    public const int WireType64Bit = 1;
     public const int WireTypeLenDelim = 2;
-    public const int WireType32Bit    = 5;
+    public const int WireType32Bit = 5;
 
     // ── Writing ──────────────────────────────────────────────────────────────
 
@@ -36,7 +36,7 @@ public static class ProtobufUtils
         // Compute required byte count via leading-zero count (BSR intrinsic on x64).
         // (value | 1) avoids the undefined LeadingZeroCount(0) edge case.
         int bits = 64 - BitOperations.LeadingZeroCount(value | 1);
-        int n    = (bits + 6) / 7;   // ceiling(bits / 7), range [1, 10]
+        int n = (bits + 6) / 7;   // ceiling(bits / 7), range [1, 10]
 
         // Each case writes exactly n bytes with no branches or loops.
         // The JIT emits a jump table for this dense integer switch.
@@ -46,76 +46,76 @@ public static class ProtobufUtils
                 data[pos] = (byte)value;
                 break;
             case 2:
-                data[pos    ] = (byte)(value        | 0x80);
-                data[pos + 1] = (byte)(value >>  7);
+                data[pos + 1] = (byte)(value >> 7);
+                data[pos] = (byte)(value | 0x80);
                 break;
             case 3:
-                data[pos    ] = (byte)(value        | 0x80);
-                data[pos + 1] = (byte)((value >>  7) | 0x80);
                 data[pos + 2] = (byte)(value >> 14);
+                data[pos + 1] = (byte)((value >> 7) | 0x80);
+                data[pos] = (byte)(value | 0x80);
                 break;
             case 4:
-                data[pos    ] = (byte)(value        | 0x80);
-                data[pos + 1] = (byte)((value >>  7) | 0x80);
-                data[pos + 2] = (byte)((value >> 14) | 0x80);
                 data[pos + 3] = (byte)(value >> 21);
+                data[pos + 2] = (byte)((value >> 14) | 0x80);
+                data[pos + 1] = (byte)((value >> 7) | 0x80);
+                data[pos] = (byte)(value | 0x80);
                 break;
             case 5:
-                data[pos    ] = (byte)(value        | 0x80);
-                data[pos + 1] = (byte)((value >>  7) | 0x80);
-                data[pos + 2] = (byte)((value >> 14) | 0x80);
-                data[pos + 3] = (byte)((value >> 21) | 0x80);
                 data[pos + 4] = (byte)(value >> 28);
+                data[pos + 3] = (byte)((value >> 21) | 0x80);
+                data[pos + 2] = (byte)((value >> 14) | 0x80);
+                data[pos + 1] = (byte)((value >> 7) | 0x80);
+                data[pos] = (byte)(value | 0x80);
                 break;
             case 6:
-                data[pos    ] = (byte)(value        | 0x80);
-                data[pos + 1] = (byte)((value >>  7) | 0x80);
-                data[pos + 2] = (byte)((value >> 14) | 0x80);
-                data[pos + 3] = (byte)((value >> 21) | 0x80);
-                data[pos + 4] = (byte)((value >> 28) | 0x80);
                 data[pos + 5] = (byte)(value >> 35);
+                data[pos + 4] = (byte)((value >> 28) | 0x80);
+                data[pos + 3] = (byte)((value >> 21) | 0x80);
+                data[pos + 2] = (byte)((value >> 14) | 0x80);
+                data[pos + 1] = (byte)((value >> 7) | 0x80);
+                data[pos] = (byte)(value | 0x80);
                 break;
             case 7:
-                data[pos    ] = (byte)(value        | 0x80);
-                data[pos + 1] = (byte)((value >>  7) | 0x80);
-                data[pos + 2] = (byte)((value >> 14) | 0x80);
-                data[pos + 3] = (byte)((value >> 21) | 0x80);
-                data[pos + 4] = (byte)((value >> 28) | 0x80);
-                data[pos + 5] = (byte)((value >> 35) | 0x80);
                 data[pos + 6] = (byte)(value >> 42);
+                data[pos + 5] = (byte)((value >> 35) | 0x80);
+                data[pos + 4] = (byte)((value >> 28) | 0x80);
+                data[pos + 3] = (byte)((value >> 21) | 0x80);
+                data[pos + 2] = (byte)((value >> 14) | 0x80);
+                data[pos + 1] = (byte)((value >> 7) | 0x80);
+                data[pos] = (byte)(value | 0x80);
                 break;
             case 8:
-                data[pos    ] = (byte)(value        | 0x80);
-                data[pos + 1] = (byte)((value >>  7) | 0x80);
-                data[pos + 2] = (byte)((value >> 14) | 0x80);
-                data[pos + 3] = (byte)((value >> 21) | 0x80);
-                data[pos + 4] = (byte)((value >> 28) | 0x80);
-                data[pos + 5] = (byte)((value >> 35) | 0x80);
-                data[pos + 6] = (byte)((value >> 42) | 0x80);
                 data[pos + 7] = (byte)(value >> 49);
+                data[pos + 6] = (byte)((value >> 42) | 0x80);
+                data[pos + 5] = (byte)((value >> 35) | 0x80);
+                data[pos + 4] = (byte)((value >> 28) | 0x80);
+                data[pos + 3] = (byte)((value >> 21) | 0x80);
+                data[pos + 2] = (byte)((value >> 14) | 0x80);
+                data[pos + 1] = (byte)((value >> 7) | 0x80);
+                data[pos] = (byte)(value | 0x80);
                 break;
             case 9:
-                data[pos    ] = (byte)(value        | 0x80);
-                data[pos + 1] = (byte)((value >>  7) | 0x80);
-                data[pos + 2] = (byte)((value >> 14) | 0x80);
-                data[pos + 3] = (byte)((value >> 21) | 0x80);
-                data[pos + 4] = (byte)((value >> 28) | 0x80);
-                data[pos + 5] = (byte)((value >> 35) | 0x80);
-                data[pos + 6] = (byte)((value >> 42) | 0x80);
-                data[pos + 7] = (byte)((value >> 49) | 0x80);
                 data[pos + 8] = (byte)(value >> 56);
+                data[pos + 7] = (byte)((value >> 49) | 0x80);
+                data[pos + 6] = (byte)((value >> 42) | 0x80);
+                data[pos + 5] = (byte)((value >> 35) | 0x80);
+                data[pos + 4] = (byte)((value >> 28) | 0x80);
+                data[pos + 3] = (byte)((value >> 21) | 0x80);
+                data[pos + 2] = (byte)((value >> 14) | 0x80);
+                data[pos + 1] = (byte)((value >> 7) | 0x80);
+                data[pos] = (byte)(value | 0x80);
                 break;
             default: // case 10: value >= 2^63, only reachable for ulong MSB set
-                data[pos    ] = (byte)(value        | 0x80);
-                data[pos + 1] = (byte)((value >>  7) | 0x80);
-                data[pos + 2] = (byte)((value >> 14) | 0x80);
-                data[pos + 3] = (byte)((value >> 21) | 0x80);
-                data[pos + 4] = (byte)((value >> 28) | 0x80);
-                data[pos + 5] = (byte)((value >> 35) | 0x80);
-                data[pos + 6] = (byte)((value >> 42) | 0x80);
-                data[pos + 7] = (byte)((value >> 49) | 0x80);
-                data[pos + 8] = (byte)((value >> 56) | 0x80);
                 data[pos + 9] = 1; // bit 63 is the only remaining bit; always 1 here
+                data[pos + 8] = (byte)((value >> 56) | 0x80);
+                data[pos + 7] = (byte)((value >> 49) | 0x80);
+                data[pos + 6] = (byte)((value >> 42) | 0x80);
+                data[pos + 5] = (byte)((value >> 35) | 0x80);
+                data[pos + 4] = (byte)((value >> 28) | 0x80);
+                data[pos + 3] = (byte)((value >> 21) | 0x80);
+                data[pos + 2] = (byte)((value >> 14) | 0x80);
+                data[pos + 1] = (byte)((value >> 7) | 0x80);
+                data[pos] = (byte)(value | 0x80);
                 break;
         }
         buf.Length = pos + n;
@@ -125,10 +125,10 @@ public static class ProtobufUtils
     public static void WriteFixed32(ref RentedBuffer buf, uint value)
     {
         buf.Extend(4);
-        buf.Data![buf.Length]     = (byte) value;
-        buf.Data![buf.Length + 1] = (byte)(value >>  8);
-        buf.Data![buf.Length + 2] = (byte)(value >> 16);
         buf.Data![buf.Length + 3] = (byte)(value >> 24);
+        buf.Data![buf.Length + 2] = (byte)(value >> 16);
+        buf.Data![buf.Length + 1] = (byte)(value >> 8);
+        buf.Data![buf.Length] = (byte)value;
         buf.Length += 4;
     }
 
@@ -170,7 +170,7 @@ public static class ProtobufUtils
     // ── ZigZag ───────────────────────────────────────────────────────────────
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ulong ZigZagEncode32(int value)  => (ulong)((value << 1) ^ (value >> 31));
+    public static ulong ZigZagEncode32(int value) => (ulong)((value << 1) ^ (value >> 31));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ulong ZigZagEncode64(long value) => (ulong)((value << 1) ^ (value >> 63));
@@ -199,9 +199,16 @@ public static class ProtobufUtils
             byte b = buf[pos + bytesRead];
             bytesRead++;
             value |= (ulong)(b & 0x7F) << shift;
-            if ((b & 0x80) == 0) return true;
+            if ((b & 0x80) == 0)
+            {
+                return true;
+            }
+
             shift += 7;
-            if (shift >= 64) return false;
+            if (shift >= 64)
+            {
+                return false;
+            }
         }
         return false;
     }
@@ -210,10 +217,10 @@ public static class ProtobufUtils
     public static bool TryReadFixed32(ReadOnlySpan<byte> buf, int pos, out uint value)
     {
         if (pos + 4 > buf.Length) { value = 0; return false; }
-        value = (uint)buf[pos]
-              | ((uint)buf[pos + 1] <<  8)
+        value = ((uint)buf[pos + 3] << 24)
               | ((uint)buf[pos + 2] << 16)
-              | ((uint)buf[pos + 3] << 24);
+              | ((uint)buf[pos + 1] << 8)
+              | buf[pos];
         return true;
     }
 
@@ -221,18 +228,19 @@ public static class ProtobufUtils
     public static bool TryReadFixed64(ReadOnlySpan<byte> buf, int pos, out ulong value)
     {
         if (pos + 8 > buf.Length) { value = 0; return false; }
-        value = (ulong)buf[pos]
-              | ((ulong)buf[pos + 1] <<  8)
-              | ((ulong)buf[pos + 2] << 16)
-              | ((ulong)buf[pos + 3] << 24)
-              | ((ulong)buf[pos + 4] << 32)
-              | ((ulong)buf[pos + 5] << 40)
+        value = ((ulong)buf[pos + 7] << 56)
               | ((ulong)buf[pos + 6] << 48)
-              | ((ulong)buf[pos + 7] << 56);
+              | ((ulong)buf[pos + 5] << 40)
+              | ((ulong)buf[pos + 4] << 32)
+              | ((ulong)buf[pos + 3] << 24)
+              | ((ulong)buf[pos + 2] << 16)
+              | ((ulong)buf[pos + 1] << 8)
+              | buf[pos];
         return true;
     }
 
     /// <summary>Skip one field at <paramref name="pos"/> with the given wire type.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool SkipField(ReadOnlySpan<byte> buf, int pos, int wireType, out int bytesSkipped)
     {
         bytesSkipped = 0;
@@ -243,24 +251,40 @@ public static class ProtobufUtils
                 {
                     byte b = buf[pos + bytesSkipped];
                     bytesSkipped++;
-                    if ((b & 0x80) == 0) return true;
+                    if ((b & 0x80) == 0)
+                    {
+                        return true;
+                    }
                 }
                 return false;
             case WireType64Bit:
-                if (pos + 8 > buf.Length) return false;
+                if (pos + 8 > buf.Length)
+                {
+                    return false;
+                }
+
                 bytesSkipped = 8; return true;
             case WireTypeLenDelim:
-                if (!TryReadVarint(buf, pos, out ulong len, out int vbr)) return false;
+                if (!TryReadVarint(buf, pos, out ulong len, out int vbr))
+                {
+                    return false;
+                }
+
                 bytesSkipped = vbr + (int)len;
                 return pos + bytesSkipped <= buf.Length;
             case WireType32Bit:
-                if (pos + 4 > buf.Length) return false;
+                if (pos + 4 > buf.Length)
+                {
+                    return false;
+                }
+
                 bytesSkipped = 4; return true;
             default:
                 return false;
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int VarintSize(ulong value)
     {
         int size = 1;
@@ -272,16 +296,19 @@ public static class ProtobufUtils
         return size;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int TagSize(int fieldNum, int wireType)
     {
         return VarintSize(EncodeTag(fieldNum, wireType));
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int LenDelimSize(int payloadLength)
     {
         return VarintSize((ulong)payloadLength) + payloadLength;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int StringByteCount(string? value)
     {
         return value != null ? Encoding.UTF8.GetByteCount(value) : 0;

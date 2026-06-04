@@ -2,7 +2,6 @@ using System.Buffers;
 using System.Buffers.Text;
 using System.Runtime.CompilerServices;
 using System.Text.Encodings.Web;
-using System.Text.Json;
 using static System.Text.Encoding;
 
 namespace QiWa.Common;
@@ -57,7 +56,7 @@ public struct RentedBuffer : IDisposable
     /// </summary>
     /// <returns>A <see cref="Span{T}"/> representing the valid memory buffer</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<byte> AsSpan()
+    public readonly Span<byte> AsSpan()
     {
         if (Length == 0)
         {
@@ -94,6 +93,10 @@ public struct RentedBuffer : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Error AppendMulti(params string[] arr)
     {
+        if (arr == null)
+        {
+            return default;
+        }
         foreach (var s in arr)
         {
             if (string.IsNullOrEmpty(s))
@@ -333,6 +336,10 @@ public struct RentedBuffer : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly RentedBuffer Clone()
     {
+        if (Data == null)
+        {
+            return new RentedBuffer(16);
+        }
         RentedBuffer cloned = new(Data.Length);
         Array.Copy(Data, cloned.Data, Length);
         cloned.Length = Length;
@@ -348,7 +355,11 @@ public struct RentedBuffer : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AppendAsJsonEscapedString(string s)
     {
-        if (string.IsNullOrEmpty(s)) return;
+        if (string.IsNullOrEmpty(s))
+        {
+            return;
+        }
+
         AppendAsJsonEscapedString(s.AsSpan());
     }
 
@@ -362,7 +373,10 @@ public struct RentedBuffer : IDisposable
     /// <param name="s">The string to append</param>
     public void AppendAsJsonEscapedString(ReadOnlySpan<char> s)
     {
-        if (s.IsEmpty) return;
+        if (s.IsEmpty)
+        {
+            return;
+        }
 
         int maxUtf8Bytes = UTF8.GetMaxByteCount(s.Length);
         // Worst case for JSON escaping: 1 byte → \uXXXX (6 bytes)
@@ -398,6 +412,8 @@ public struct RentedBuffer : IDisposable
         }
     }
 
+    private static ReadOnlySpan<byte> Hex => "0123456789abcdef"u8;
+
     /// <summary>
     /// Appends a UTF-8 byte span to the buffer with JSON escaping. Special characters such as <c>"</c>, <c>\</c>,
     /// <c>\t</c>, and <c>\n</c> are replaced with their escape sequences. Strings with many special characters
@@ -407,7 +423,7 @@ public struct RentedBuffer : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AppendAsJsonEscapedString(ReadOnlySpan<byte> s)
     {
-        int needed = s.Length * 2;
+        int needed = s.Length * 6;  // Worst case: every byte is a special character that needs to be escaped as \uXXXX (6 bytes)
         Extend(needed);
         foreach (var b in s)
         {
@@ -433,9 +449,122 @@ public struct RentedBuffer : IDisposable
                     Data[Length + 1] = (byte)'"';
                     Length += 2;
                     break;
+                case (byte)'\r':
+                    Data[Length] = (byte)'\\';
+                    Data[Length + 1] = (byte)'r';
+                    Length += 2;
+                    break;
+                case (byte)'\b':
+                    Data[Length] = (byte)'\\';
+                    Data[Length + 1] = (byte)'b';
+                    Length += 2;
+                    break;
+                case (byte)'\f':
+                    Data[Length] = (byte)'\\';
+                    Data[Length + 1] = (byte)'f';
+                    Length += 2;
+                    break;
                 default:
-                    Data[Length] = b;
-                    Length++;
+                    if (b < 0x20)
+                    {
+                        Data[Length] = (byte)'\\';
+                        Data[Length + 1] = (byte)'u';
+                        Data[Length + 2] = (byte)'0';
+                        Data[Length + 3] = (byte)'0';
+                        Data[Length + 4] = Hex[b >> 4];
+                        Data[Length + 5] = Hex[b & 0x0f];
+                        Length += 6;
+                    }
+                    else
+                    {
+                        Data[Length] = b;
+                        Length++;
+                    }
+                    break;
+            }
+        }
+    }
+
+    private static readonly byte[] bitmap = new byte[256 / 8];
+
+    static RentedBuffer()
+    {
+        static void SetBit(byte b)
+        {
+            int index = b / 8;
+            int bit = b % 8;
+            bitmap[index] |= (byte)(1 << bit);
+        }
+
+        for (byte b = 0; b < 0x20; b++)
+        {
+            bitmap[b / 8] |= (byte)(1 << (b % 8));
+        }
+        SetBit((byte)'"');
+        SetBit((byte)'\\');
+    }
+
+    // 原版 950.64 MiB/s
+    // V2 861.30 MiB/s
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AppendAsJsonEscapedStringV2(ReadOnlySpan<byte> s)
+    {
+        int needed = s.Length * 6;
+        Extend(needed);
+        foreach (var b in s)
+        {
+            // fast path
+            if ((bitmap[b / 8] & (1 << (b % 8))) == 0)
+            {
+                Data[Length] = b;
+                Length++;
+                continue;
+            }
+            switch (b)
+            {
+                case (byte)'\t':
+                    Data[Length + 1] = (byte)'t';
+                    Data[Length] = (byte)'\\';
+                    Length += 2;
+                    break;
+                case (byte)'\n':
+                    Data[Length + 1] = (byte)'n';
+                    Data[Length] = (byte)'\\';
+                    Length += 2;
+                    break;
+                case (byte)'\\':
+                    Data[Length + 1] = (byte)'\\';
+                    Data[Length] = (byte)'\\';
+                    Length += 2;
+                    break;
+                case (byte)'"':
+                    Data[Length + 1] = (byte)'"';
+                    Data[Length] = (byte)'\\';
+                    Length += 2;
+                    break;
+                case (byte)'\r':
+                    Data[Length] = (byte)'\\';
+                    Data[Length + 1] = (byte)'r';
+                    Length += 2;
+                    break;
+                case (byte)'\b':
+                    Data[Length + 1] = (byte)'b';
+                    Data[Length] = (byte)'\\';
+                    Length += 2;
+                    break;
+                case (byte)'\f':
+                    Data[Length + 1] = (byte)'f';
+                    Data[Length] = (byte)'\\';
+                    Length += 2;
+                    break;
+                default:
+                    Data[Length + 5] = Hex[b & 0x0f];
+                    Data[Length + 4] = Hex[b >> 4];
+                    Data[Length + 3] = (byte)'0';
+                    Data[Length + 2] = (byte)'0';
+                    Data[Length + 1] = (byte)'u';
+                    Data[Length] = (byte)'\\';
+                    Length += 6;
                     break;
             }
         }
@@ -448,6 +577,10 @@ public struct RentedBuffer : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly int Remain()
     {
+        if (Data == null)
+        {
+            return 0;
+        }
         return this.Data.Length - this.Length;
     }
 }

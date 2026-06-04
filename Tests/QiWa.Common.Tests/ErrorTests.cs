@@ -147,4 +147,35 @@ public class ErrorTests
 
         Assert.True(error.Err());
     }
+
+    // ─── Null parameter handling ──────────────────────────────────────────────
+
+    [Fact]
+    public void Constructor_WithNullMessage_MessageIsEmpty()
+    {
+        var error = new Error(42u, null!);
+
+        Assert.Equal(42u, error.Code);
+        Assert.Equal(string.Empty, error.Message);
+    }
+
+    [Fact]
+    public void WithLoc_WithNullMessage_DoesNotThrow()
+    {
+        var error = Error.WithLoc(1u, null!);
+
+        Assert.True(error.Err());
+        Assert.NotNull(error.Message);
+        Assert.Contains("Code=1", error.Message);
+    }
+
+    [Fact]
+    public void WithLoc_WithExplicitNullFileAndMember_DoesNotThrow()
+    {
+        var error = Error.WithLoc(1u, "msg", file: null!, member: null!, line: 0);
+
+        Assert.True(error.Err());
+        Assert.Equal(1u, error.Code);
+        Assert.NotNull(error.Message);
+    }
 }

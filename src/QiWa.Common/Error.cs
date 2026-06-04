@@ -25,7 +25,7 @@ public readonly struct Error
     public Error(System.UInt32 code, string message)
     {
         Code = code;
-        Message = message;
+        Message = message ?? string.Empty;
     }
 
     /// <summary>
@@ -54,6 +54,10 @@ public readonly struct Error
         [CallerLineNumber] int line = 0
     )
     {
+        if (string.IsNullOrEmpty(file))
+        {
+            file = string.Empty;
+        }
         for (int i = file.Length - 1; i >= 0; i--)
         {
             if (file[i] == '/' || file[i] == '\\')

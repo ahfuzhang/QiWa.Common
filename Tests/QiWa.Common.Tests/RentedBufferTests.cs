@@ -204,6 +204,19 @@ public class RentedBufferTests
         finally { buf.Dispose(); }
     }
 
+    [Fact]
+    public void AppendMulti_NullArray_ReturnsDefaultError()
+    {
+        var buf = new RentedBuffer(64);
+        try
+        {
+            var err = buf.AppendMulti(null!);
+            Assert.False(err.Err());
+            Assert.Equal(0, buf.Length);
+        }
+        finally { buf.Dispose(); }
+    }
+
     // ─── Append(string) ───────────────────────────────────────────────────────
 
     [Fact]
@@ -718,6 +731,21 @@ public class RentedBufferTests
         }
     }
 
+    [Fact]
+    public void Clone_AfterDispose_ReturnsEmptyBuffer()
+    {
+        var buf = new RentedBuffer(64);
+        buf.Append("data");
+        buf.Dispose();
+
+        var clone = buf.Clone();
+        try
+        {
+            Assert.Equal(0, clone.Length);
+        }
+        finally { clone.Dispose(); }
+    }
+
     // ─── AppendAsJsonEscapedString(string) ────────────────────────────────────
 
     [Fact]
@@ -956,5 +984,16 @@ public class RentedBufferTests
             Assert.Equal(@"\t\n\\\""", result);
         }
         finally { buf.Dispose(); }
+    }
+
+    // ─── Remain ───────────────────────────────────────────────────────────────
+
+    [Fact]
+    public void Remain_AfterDispose_ReturnsZero()
+    {
+        var buf = new RentedBuffer(64);
+        buf.Dispose();
+
+        Assert.Equal(0, buf.Remain());
     }
 }

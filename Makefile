@@ -23,7 +23,7 @@ coverage:
 	@echo ""
 	@echo "Coverage report: $(COVERAGE_REPORT)/index.html"
 
-VER=0.1.7
+VER=0.2.0
 
 pack:
 	dotnet pack -c Release -p:PackageVersion=$(VER)
@@ -34,3 +34,16 @@ push:
 		--api-key $(KEY) \
 		--source https://api.nuget.org/v3/index.json
 
+fmt:
+	dotnet format QiWa.Common.csproj
+
+lint:
+	dotnet format whitespace QiWa.Common.csproj --verify-no-changes --verbosity diagnostic  && \
+	dotnet format style QiWa.Common.csproj --severity warn --verify-no-changes --verbosity diagnostic  && \
+	dotnet format analyzers QiWa.Common.csproj --verify-no-changes --severity info --verbosity diagnostic 
+	# dotnet format analyzers QiWa.Common.csproj --verify-no-changes --severity warn --verbosity diagnostic 
+
+install_analyzer:
+	dotnet add QiWa.Common.csproj package Microsoft.VisualStudio.Threading.Analyzers
+	dotnet add QiWa.Common.csproj package AsyncFixer
+	dotnet add QiWa.Common.csproj package Meziantou.Analyzer
