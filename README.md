@@ -19,7 +19,7 @@ https://www.nuget.org/packages/QiWa.Common/
 
 ```bash
 dotnet add package QiWa.Common \
-  --version 0.2.0 \
+  --version 0.2.1 \
   --source https://api.nuget.org/v3/index.json
 ```
 
@@ -27,7 +27,7 @@ dotnet add package QiWa.Common \
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="QiWa.Common" Version="0.2.0" />
+  <PackageReference Include="QiWa.Common" Version="0.2.1" />
 </ItemGroup>
 ```
 

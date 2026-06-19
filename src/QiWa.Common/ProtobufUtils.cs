@@ -284,6 +284,7 @@ public static class ProtobufUtils
         }
     }
 
+    [Obsolete()]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int VarintSize(ulong value)
     {
@@ -296,18 +297,21 @@ public static class ProtobufUtils
         return size;
     }
 
+    [Obsolete()]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int TagSize(int fieldNum, int wireType)
     {
         return VarintSize(EncodeTag(fieldNum, wireType));
     }
 
+    [Obsolete()]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int LenDelimSize(int payloadLength)
     {
         return VarintSize((ulong)payloadLength) + payloadLength;
     }
 
+    [Obsolete()]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int StringByteCount(string? value)
     {

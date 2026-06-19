@@ -23,7 +23,7 @@ coverage:
 	@echo ""
 	@echo "Coverage report: $(COVERAGE_REPORT)/index.html"
 
-VER=0.2.0
+VER=0.2.1
 
 pack:
 	dotnet pack -c Release -p:PackageVersion=$(VER)
